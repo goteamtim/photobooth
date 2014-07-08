@@ -1,20 +1,23 @@
 import time
 import picamera
-import pygame
-import sys
+#import pygame
+from sys import exit
+import random
 import os
 from PIL import Image, ImageFilter
+import array
 
-capturedImageFileNames = []
+capturedImageFileNames = ['','','','']
+#cameraEffectType = ['sketch','blur','negative','saturation','posterise','cartoon','pastel']
 
 now = time.strftime("%H%M%S")
 day = time.strftime("%d%m%y")
 
-x = int(raw_input("Enter 1 if you love America! "))
+x = int(raw_input("Enter 1 to take some photos! "))
 
 if x==1:
         
-        imageFile = '/home/pi/photobooth/%s/image%s.jpeg'% (day, now)
+        
         # INIT CAMERA
         camera = picamera.PiCamera()
         camera.vflip = True
@@ -22,26 +25,33 @@ if x==1:
         camera.brightness = 60
         camera.resolution = (612,612)
 
-        if not os.path.exists("/home/pi/photobooth/"+day): #If the folder for today does not exist create it
-                os.makedirs("/home/pi/photobooth/"+day)
+        if not os.path.exists("/home/pi/photoboothPhotos/"+day): #If the folder for today does not exist create it
+                os.makedirs("/home/pi/photoboothPhotos/"+day)
         
         for x in range (0,4):
-            camera.capture(imageFile) #save in the today folder with current time
-            time.sleep(1)
-            capturedImageFileNames[x] = imageFile
+            temp = '/home/pi/photoboothPhotos/%s/image%s-%s.jpeg'% (day, now,x)
+            #camera.image_effect = random.choice(cameraEffectType)
+            for p in range(0,3):
+                    i = 3
+                    print i-p
+                    time.sleep(0.5)
+            camera.capture(temp) #save in the today folder with current time
+            capturedImageFileNames[x] = temp
+            #print capturedImageFileNames[x]
+            #capturedImageFileNames[x] = temp
         camera.close()
         print 'Your photos have been taken.'
-        sys.exit()
+        #sys.exit(0)
         
 
 else :
 	print "Thank you, no photos taken."
-	sys.exit()
+	sys.exit(0)
 
 j = str(raw_input('Would you like to create a montage? (yes or no)'))
 
 if j=='no':
-    sys.exit()
+    sys.exit(0)
 elif j=='yes':
     out = Image.new("RGB", (1269, 1269), "black") #actual final image
     '''
@@ -56,9 +66,9 @@ elif j=='yes':
     out.paste(Image.open(capturedImageFileNames[3]), (int(642), int(642))) #image number four
 
     print "Saving..."
-    if not os.path.exists("/home/pi/photobooth/"+day): #If the folder for today does not exist create it
-        os.makedirs("/home/pi/photobooth/"+day)
-    out.save('/home/pi/photobooth/%s/montage%s.jpeg'% (day, now)) #save in the today folder with current time
+    if not os.path.exists("/home/pi/photoboothPhotos/"+day): #If the folder for today does not exist create it
+        os.makedirs("/home/pi/photoboothPhotos/"+day)
+    out.save('/home/pi/photoboothPhotos/%s/montage%s.jpeg'% (day, now)) #save in the today folder with current time
 
     print "Done."
 
