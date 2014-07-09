@@ -7,6 +7,39 @@ import os
 from PIL import Image, ImageFilter
 import array
 import string
+import RPi.GPIO as GPIO
+
+#SETUP GPIO
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(23, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
+GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+
+#FUNCTIONS
+def takePicture():
+	camera = picamera.PiCamera()
+    camera.vflip = True
+    camera.hflip = False
+    camera.brightness = 60
+    camera.resolution = (612,612)
+    if not os.path.exists("/home/pi/photoboothPhotos/"+day): #If the folder for today does not exist create it
+            os.makedirs("/home/pi/photoboothPhotos/"+day)
+    
+    for x in range (0,4):
+        temp = '/home/pi/photoboothPhotos/%s/image%s-%s.jpeg'% (day, now,x)
+        #camera.image_effect = random.choice(cameraEffectType)
+        for p in range(0,3):
+                i = 3
+                print i-p
+                time.sleep(0.5)
+        camera.capture(temp) #save in the today folder with current time
+        capturedImageFileNames[x] = temp
+        #print capturedImageFileNames[x]
+        #capturedImageFileNames[x] = temp
+    camera.close()
+    print 'Your photos have been taken.'
+    #sys.exit(0)
+
+GPIO.add_event_detect(23, GPIO.RISING, callback=takePicture, bouncetime=300) #When the button is pressed, it calls the take picture function
 
 capturedImageFileNames = ['','','','']
 #cameraEffectType = ['sketch','blur','negative','saturation','posterise','cartoon','pastel']
