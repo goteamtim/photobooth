@@ -6,6 +6,7 @@ import random
 import os
 from PIL import Image, ImageFilter
 import array
+import string
 
 capturedImageFileNames = ['','','','']
 #cameraEffectType = ['sketch','blur','negative','saturation','posterise','cartoon','pastel']
@@ -13,9 +14,9 @@ capturedImageFileNames = ['','','','']
 now = time.strftime("%H%M%S")
 day = time.strftime("%d%m%y")
 
-x = int(raw_input("Enter 1 to take some photos! "))
+x = int(raw_input("Would you like to take some photos? (yes or no)"))
 
-if x==1:
+if string.lower(x)=='yes':
         
         
         # INIT CAMERA
@@ -50,12 +51,10 @@ else :
 
 j = str(raw_input('Would you like to create a montage? (yes or no)'))
 
-if j=='no':
-    sys.exit(0)
-elif j=='yes':
+if j=='yes':
     out = Image.new("RGB", (1269, 1269), "black") #actual final image
     '''
-    Image will be as follows
+    Final image will be as follows
     [1][2]
     [3][4]
     '''
@@ -69,9 +68,8 @@ elif j=='yes':
     if not os.path.exists("/home/pi/photoboothPhotos/"+day): #If the folder for today does not exist create it
         os.makedirs("/home/pi/photoboothPhotos/"+day)
     out.save('/home/pi/photoboothPhotos/%s/montage%s.jpeg'% (day, now)) #save in the today folder with current time
-
+	
     print "Done."
-
     sys.exit(0)
 
 else: 
