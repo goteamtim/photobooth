@@ -15,8 +15,8 @@ GPIO.setup(23, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
 #FUNCTIONS
-def takePicture():
-	camera = picamera.PiCamera()
+def takePicture(input):
+    camera = picamera.PiCamera()
     camera.vflip = True
     camera.hflip = False
     camera.brightness = 60
@@ -47,7 +47,7 @@ capturedImageFileNames = ['','','','']
 now = time.strftime("%H%M%S")
 day = time.strftime("%d%m%y")
 
-x = int(raw_input("Would you like to take some photos? (yes or no)"))
+x = str(raw_input("Would you like to take some photos? (yes or no)"))
 
 if string.lower(x)=='yes':
         
