@@ -53,7 +53,7 @@ def takePicture(input):
     out.save('/home/pi/photoboothPhotos/%s/montage%s.jpeg'% (day, now)) #save in the today folder with current time
 
     print "Done."
-    sys.exit(0)
+    #sys.exit(0)
 
 GPIO.add_event_detect(23, GPIO.RISING, callback=takePicture, bouncetime=300) #When the button is pressed, it calls the take picture function
 
