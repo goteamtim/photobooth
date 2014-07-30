@@ -1,6 +1,7 @@
 import time
 import picamera
 #import pygame
+import qrcode
 from sys import exit
 import random
 import os
