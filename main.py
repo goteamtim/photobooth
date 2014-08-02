@@ -17,6 +17,9 @@ GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
 #FUNCTIONS
 def takePicture(input):
+	capturedImageFileNames = ['','','','']
+	now = time.strftime("%H%M%S")
+	day = time.strftime("%m%d%y")
     camera = picamera.PiCamera()
     camera.vflip = True
     camera.hflip = False
@@ -50,12 +53,11 @@ def takePicture(input):
     if not os.path.exists("/home/pi/photoboothPhotos/"+day): #If the folder for today does not exist create it
         os.makedirs("/home/pi/photoboothPhotos/"+day)
     out.save('/home/pi/photoboothPhotos/%s/montage%s.jpeg'% (day, now)) #save in the today folder with current time
+	#Bug,
     print "Done."
 
 GPIO.add_event_detect(23, GPIO.FALLING, callback=takePicture, bouncetime=200) #Button pres calls the take picture function
-capturedImageFileNames = ['','','','']
-now = time.strftime("%H%M%S")
-day = time.strftime("%d%m%y")
+
 
 while True:
     print "Press button one to take a picture and 2 to exit"
