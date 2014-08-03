@@ -13,7 +13,7 @@ import RPi.GPIO as GPIO
 #Include error handling later
 #if not os.path.isfile("/home/totalPictures.dat"): 
         #DataIn = open("/home/totalPictures.dat","w")#Create a writeable file if it doesnt exist
-dataIn = open('/home/totalPictures.dat',"r")
+dataIn = open('/home/pi/totalPictures.dat',"r")
 totalPicturesTaken = int(dataIn.readline())
 print totalPicturesTaken
 dataIn.close()
@@ -25,6 +25,7 @@ GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
 #FUNCTIONS
 def takePicture(input):
+    global totalPicturesTaken
     capturedImageFileNames = ['','','','']
     now = time.strftime("%H%M%S")
     day = time.strftime("%m%d%y")
@@ -80,7 +81,8 @@ while True:
     GPIO.wait_for_edge(24, GPIO.FALLING)
     GPIO.cleanup()
     print "Exiting..."
-    f = open('/home/totalPictures.dat',"w")
-    f.write(totalPicturesTaken)
+    f = open('/home/pi/totalPictures.dat',"w")
+    print "writing "+ str(totalPicturesTaken)
+    f.write(str(totalPicturesTaken))
     f.close()
     Sys.exit(0)
