@@ -1,9 +1,7 @@
-import httplib2
-import pprint
 import time
 import picamera
 #import pygame
-import qrcode
+#import qrcode
 from sys import exit
 import random
 import os
@@ -12,25 +10,12 @@ import array
 import string
 import RPi.GPIO as GPIO
 
-from apiclient.discovery import build
-from apiclient.http import MediaFileUpload
-from oauth2client.client import OAuth2WebServerFlow
-
-#SETUP VARIABLES
-CLIENT_ID = 'YOUR_CLIENT_ID'
-CLIENT_SECRET = 'YOUR_CLIENT_SECRET'
-
-# Check https://developers.google.com/drive/scopes for all available scopes
-OAUTH_SCOPE = 'https://www.googleapis.com/auth/drive'
-
-# Redirect URI for installed apps
-REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
-
 #Include error handling later
 #if not os.path.isfile("/home/totalPictures.dat"): 
         #DataIn = open("/home/totalPictures.dat","w")#Create a writeable file if it doesnt exist
 dataIn = open('/home/totalPictures.dat',"r")
 totalPicturesTaken = int(dataIn.readline())
+print totalPicturesTaken
 dataIn.close()
 
 #SETUP GPIO
@@ -40,9 +25,9 @@ GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
 #FUNCTIONS
 def takePicture(input):
-	capturedImageFileNames = ['','','','']
-	now = time.strftime("%H%M%S")
-	day = time.strftime("%m%d%y")
+    capturedImageFileNames = ['','','','']
+    now = time.strftime("%H%M%S")
+    day = time.strftime("%m%d%y")
     camera = picamera.PiCamera()
     camera.vflip = True
     camera.hflip = False
@@ -73,18 +58,17 @@ def takePicture(input):
     out.paste(Image.open(capturedImageFileNames[2]), (int(15), int(642))) #image number three
     out.paste(Image.open(capturedImageFileNames[3]), (int(642), int(642))) #image number four
     print "Saving..."
-	totalPicturesTaken+=1
+    totalPicturesTaken+=1
     if not os.path.exists("/home/pi/photoboothPhotos/"+day): #If the folder for today does not exist create it
         os.makedirs("/home/pi/photoboothPhotos/"+day)
     out.save('/home/pi/photoboothPhotos/%s/montage%s.jpeg'% (day, now)) #save in the today folder with current time
     print "Picture saved locally, uploading..."
 	#writing total pictures amount to local file
-	try:
-		#uploading to drive
-		#Calling out to server and setting total pictures
-		break
-	except :
-		print "Error uploading, file still saved locally."
+    #try:
+    #uploading to drive	#Calling out to server and setting total pictures
+        #break
+    #except:
+            #print "Error uploading, file still saved locally."
 		
 	
 
@@ -94,9 +78,9 @@ GPIO.add_event_detect(23, GPIO.FALLING, callback=takePicture, bouncetime=200) #B
 while True:
     print "Press button one to take a picture and 2 to exit."
     GPIO.wait_for_edge(24, GPIO.FALLING)
-    GPIO.Cleanup()
+    GPIO.cleanup()
     print "Exiting..."
-	f = open('/home/totalPictures.dat',"w")
-	f.write(totalPicturesTaken)
-	f.close()
+    f = open('/home/totalPictures.dat',"w")
+    f.write(totalPicturesTaken)
+    f.close()
     Sys.exit(0)
