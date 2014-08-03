@@ -1,7 +1,6 @@
 import time
 import picamera
 #import pygame
-#import qrcode
 from sys import exit
 import random
 import os
@@ -9,10 +8,18 @@ from PIL import Image, ImageFilter
 import array
 import string
 import RPi.GPIO as GPIO
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEBase import MIMEBase
+from email.MIMEText import MIMEText
+from email import Encoders
 
-#Include error handling later
-#if not os.path.isfile("/home/totalPictures.dat"): 
-        #DataIn = open("/home/totalPictures.dat","w")#Create a writeable file if it doesnt exist
+gmuFile = open('/home/pi/id.dat',"r")
+secretFile = open('/home/pi/secret.dat',"r")
+gmail_user = gmuFile.readline()
+gmail_pwd = secretFile.readline()
+
+#Setup total picture count.  
 dataIn = open('/home/pi/totalPictures.dat',"r")
 totalPicturesTaken = int(dataIn.readline())
 print totalPicturesTaken
@@ -24,6 +31,27 @@ GPIO.setup(23, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
 #FUNCTIONS
+def sendMail(to,subject,text,attach):
+        msg = MIMEMultipart()
+        msg['From']=gmail_user
+        msg['To'] = gmail_pwd
+        msg['Subject']=subject
+        msg.attach(MIMEText(text))
+
+        part = MIMEBase('application','octet-stream')
+        part.set_payload(open(attach,'rb').read())
+        Encoders.encode_base64(part)
+        part.add_header('Content-Disposition','attachment; filename="%s"' %os.path.basename(attach))
+        msg.attach(part)
+
+        mailServer = smtplib.SMTP("smtp.gmail.com", 587)
+        mailServer.ehlo()
+        mailServer.starttls()
+        mailServer.ehlo()
+        mailServer.login(gmail_user,gmail_pwd)
+        mailServer.sendmail(gmail_user,to,msg.as_string())
+        mailServer.close()
+
 def takePicture(input):
     global totalPicturesTaken
     capturedImageFileNames = ['','','','']
@@ -60,21 +88,18 @@ def takePicture(input):
     out.paste(Image.open(capturedImageFileNames[3]), (int(642), int(642))) #image number four
     print "Saving..."
     totalPicturesTaken+=1
+    path = '/home/pi/photoboothPhotos/%s/montage%s.jpeg'% (day, now)
     if not os.path.exists("/home/pi/photoboothPhotos/"+day): #If the folder for today does not exist create it
         os.makedirs("/home/pi/photoboothPhotos/"+day)
-    out.save('/home/pi/photoboothPhotos/%s/montage%s.jpeg'% (day, now)) #save in the today folder with current time
+    out.save(path) #save in the today folder with current time
     print "Picture saved locally, uploading..."
-	#writing total pictures amount to local file
-    #try:
-    #uploading to drive	#Calling out to server and setting total pictures
-        #break
-    #except:
-            #print "Error uploading, file still saved locally."
+    sendMail("piphotobooth@gmail.com",
+             "Image taken!",
+             "Email from the photobooth.",
+             path)
+    print "Done, ready for another picture."
 		
-	
-
 GPIO.add_event_detect(23, GPIO.FALLING, callback=takePicture, bouncetime=200) #Button pres calls the take picture function
-
 
 while True:
     print "Press button one to take a picture and 2 to exit."
@@ -82,7 +107,6 @@ while True:
     GPIO.cleanup()
     print "Exiting..."
     f = open('/home/pi/totalPictures.dat',"w")
-    print "writing "+ str(totalPicturesTaken)
     f.write(str(totalPicturesTaken))
     f.close()
     Sys.exit(0)
