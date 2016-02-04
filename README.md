@@ -7,6 +7,6 @@ Photobooth app that waits for a button press then takes four pictures and combin
 ===========
 * If connected to the internet
 	- Post to social media
-	- Backup to google drive
+	- Backup to google Photos
 * If idle for one minute, begin a slideshow of the pictures taken during that day
 * Add overall counter and post to a website

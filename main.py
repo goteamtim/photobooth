@@ -1,7 +1,6 @@
 import time
 import picamera
 #import pygame
-import qrcode
 from sys import exit
 import random
 import os
@@ -9,6 +8,22 @@ from PIL import Image, ImageFilter
 import array
 import string
 import RPi.GPIO as GPIO
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEBase import MIMEBase
+from email.MIMEText import MIMEText
+from email import Encoders
+
+gmuFile = open('/home/pi/id.dat',"r")
+secretFile = open('/home/pi/secret.dat',"r")
+gmail_user = gmuFile.readline()
+gmail_pwd = secretFile.readline()
+
+#Setup total picture count.  
+dataIn = open('/home/pi/totalPictures.dat',"r")
+totalPicturesTaken = int(dataIn.readline())
+print totalPicturesTaken
+dataIn.close()
 
 #SETUP GPIO
 GPIO.setmode(GPIO.BCM)
@@ -16,7 +31,32 @@ GPIO.setup(23, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
 #FUNCTIONS
+def sendMail(to,subject,text,attach):
+        msg = MIMEMultipart()
+        msg['From']=gmail_user
+        msg['To'] = gmail_pwd
+        msg['Subject']=subject
+        msg.attach(MIMEText(text))
+
+        part = MIMEBase('application','octet-stream')
+        part.set_payload(open(attach,'rb').read())
+        Encoders.encode_base64(part)
+        part.add_header('Content-Disposition','attachment; filename="%s"' %os.path.basename(attach))
+        msg.attach(part)
+
+        mailServer = smtplib.SMTP("smtp.gmail.com", 587)
+        mailServer.ehlo()
+        mailServer.starttls()
+        mailServer.ehlo()
+        mailServer.login(gmail_user,gmail_pwd)
+        mailServer.sendmail(gmail_user,to,msg.as_string())
+        mailServer.close()
+
 def takePicture(input):
+    global totalPicturesTaken
+    capturedImageFileNames = ['','','','']
+    now = time.strftime("%H%M%S")
+    day = time.strftime("%m%d%y")
     camera = picamera.PiCamera()
     camera.vflip = True
     camera.hflip = False
@@ -34,7 +74,7 @@ def takePicture(input):
         camera.capture(temp) #save in the today folder with current time
         capturedImageFileNames[x] = temp
     camera.close()
-    print 'Your photos have been taken.'
+    print 'Your photos have been taken, creating montage...'
     out = Image.new("RGB", (1269, 1269), "black") #actual final image
     '''
     Final image will be as follows
@@ -47,19 +87,26 @@ def takePicture(input):
     out.paste(Image.open(capturedImageFileNames[2]), (int(15), int(642))) #image number three
     out.paste(Image.open(capturedImageFileNames[3]), (int(642), int(642))) #image number four
     print "Saving..."
+    totalPicturesTaken+=1
+    path = '/home/pi/photoboothPhotos/%s/montage%s.jpeg'% (day, now)
     if not os.path.exists("/home/pi/photoboothPhotos/"+day): #If the folder for today does not exist create it
         os.makedirs("/home/pi/photoboothPhotos/"+day)
-    out.save('/home/pi/photoboothPhotos/%s/montage%s.jpeg'% (day, now)) #save in the today folder with current time
-    print "Done."
-
+    out.save(path) #save in the today folder with current time
+    print "Picture saved locally, uploading..."
+    sendMail("piphotobooth@gmail.com",
+             "Image taken!",
+             "Email from the photobooth.",
+             path)
+    print "Done, ready for another picture."
+		
 GPIO.add_event_detect(23, GPIO.FALLING, callback=takePicture, bouncetime=200) #Button pres calls the take picture function
-capturedImageFileNames = ['','','','']
-now = time.strftime("%H%M%S")
-day = time.strftime("%d%m%y")
 
 while True:
-    print "Press button one to take a picture and 2 to exit"
+    print "Press button one to take a picture and 2 to exit."
     GPIO.wait_for_edge(24, GPIO.FALLING)
-    GPIO.Cleanup()
+    GPIO.cleanup()
     print "Exiting..."
+    f = open('/home/pi/totalPictures.dat',"w")
+    f.write(str(totalPicturesTaken))
+    f.close()
     Sys.exit(0)
